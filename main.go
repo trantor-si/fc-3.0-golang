@@ -1,24 +1,48 @@
 package main
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+	"net/http"
+
+	_ "github.com/mattn/go-sqlite3"
+)
 
 type Product struct {
-	name          string
-	description   string
-	purchasePrice float64
+	name        string
+	description string
+	price       float64
 }
 
-func (p Product) getSalesPrice() float64 {
+func (p *Product) getSalesPrice() float64 {
 	p.name = "trantor-si"
-	return p.purchasePrice * 2
+	return p.price * 2
 }
 
 func main() {
-	product := Product{
-		name:          "Laptop",
-		description:   "Laptop description",
-		purchasePrice: 1000.0,
-	}
+	http.HandleFunc("/", hello)
+	http.ListenAndServe(":9191", nil)
+}
 
-	fmt.Println(product.getSalesPrice(), ":", product.name)
+func hello(w http.ResponseWriter, r *http.Request) {
+	product := Product{name: "iPhone", price: 1000}
+	w.Write([]byte("Before insert..."))
+	persistProduct(product)
+	w.Write([]byte("Inserted!"))
+}
+
+func persistProduct(product Product) {
+	db, err := sql.Open("sqlite3", "teste.db")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	stmt, err := db.Prepare("Insert into products(name,purchasePrice) values ($1,$2)")
+	if err != nil {
+		panic(err)
+	}
+	_, err = stmt.Exec(product.name, product.price)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
