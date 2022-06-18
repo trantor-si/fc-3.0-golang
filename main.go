@@ -1,76 +1,30 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/labstack/echo/v4"
-
-	_ "github.com/mattn/go-sqlite3"
+	"fmt"
+	"time"
 )
 
-type Product struct {
-	Name        string  `json:"product-name" xml:"product-name"`
-	Description string  `json:"product-description" xml:"product-description"`
-	Price       float64 `json:"product-price" xml:"product-price"`
+func worker1(done chan string) {
+	fmt.Println("worker1 started")
+	time.Sleep(time.Second * 2)
+	fmt.Println("worker1 id done")
+	done <- "Worker1 f*"
 }
 
-type User struct {
-	Name  string `json:"user-name" xml:"user-name"`
-	Email string `json:"user-email" xml:"user-email"`
-}
-
-var products []Product
-
-func generateProducts() {
-	p1 := Product{Name: "Product 1", Price: 1.99}
-	p2 := Product{Name: "Product 1", Price: 2.99}
-	products = append(products, p1, p2)
-}
-
-// Handler
-func hello(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
-}
-
-func listProducts(c echo.Context) error {
-	return c.JSON(http.StatusOK, products)
-}
-
-func listUsers(c echo.Context) error {
-	u := &User{
-		Name:  "Trantor SI",
-		Email: "luccostajr@gmail.com",
-	}
-	return c.JSON(http.StatusOK, u)
+func worker2(done chan string) {
+	fmt.Println("worker2 started")
+	time.Sleep(time.Second * 2)
+	fmt.Println("worker2 id done")
+	done <- "Worker2 f*"
 }
 
 func main() {
-	generateProducts()
+	done := make(chan string)
 
-	e := echo.New()
-	// e.Use(middleware.Logger())
-	// e.Use(middleware.Recover())
+	go worker1(done)
+	go worker2(done)
 
-	// Routes
-	e.GET("/", hello)
-	e.GET("/users", listUsers)
-	e.GET("/products", listProducts)
-
-	e.Logger.Fatal(e.Start(":9191"))
+	fmt.Println(<-done)
+	time.Sleep(time.Second * 10)
 }
-
-// func persistProduct(product Product) {
-// 	db, err := sql.Open("sqlite3", "teste.db")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer db.Close()
-// 	stmt, err := db.Prepare("Insert into products(name,price) values ($1,$2)")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	_, err = stmt.Exec(product.name, product.price)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// }

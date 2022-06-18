@@ -1,0 +1,7 @@
+POST http://localhost:9191/products HTTP/1.1
+Content-Type: application/json
+
+{
+    "product-name": "Cama casal King",
+    "product-price": 1950
+}
